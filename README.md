@@ -32,7 +32,7 @@ ipapi.location(callback)       // Complete location for your IP address
   }
 
 
-ipapi.location(callback, '', '', 'ip')         // Your external IP address
+ipapi.location(callback,'ip', '', '' )         // Your external IP address
 50.1.2.3
 
 ipapi.location(callback, '', '', 'city')       // Your city
