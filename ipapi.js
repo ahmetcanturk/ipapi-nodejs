@@ -5,44 +5,24 @@ var https = require('https');
 
 var API_KEY = '';
 
-var headers   = {'user-agent': 'ipapi/ipapi-nodejs/0.3.0'};
+var headers = { 'user-agent': 'ipapi/ipapi-nodejs/0.3' };
 
-var fieldList = ['ip', 'city', 'region', 'country', 'postal', 
-                  'latitude', 'longitude', 'timezone', 'latlong'];
+var fieldList = ['ip', 'city', 'region', 'country', 'postal',
+    'latitude', 'longitude', 'timezone', 'latlong'];
 
-
-var _request = function(path, callback, isJson){
-    var options = {
+var _request = async (path, callback, isJson) => new Promise(resolve => {
+    https.get({
         host: 'ipapi.co',
         path: path,
         headers: headers
-    };
-
-    var req = https.get(options, function(resp){
+    }, resp => {
         var body = ''
+        resp.on('data', data => body += data);
+        resp.on('end', () => resolve(isJson ? callback(JSON.parse(body)) : callback(body)));
+    }).on('error', e => callback(new Error(e)));
+});
 
-        resp.on('data', function(data){
-            body += data;
-        });
-
-        resp.on('end', function(){
-            if (isJson) {
-                var loc = JSON.parse(body);            
-                callback(loc);
-            } else {
-                var loc = body;
-                callback(loc);
-            }
-        });
-    });
-
-    req.on('error', function(e) {
-      callback(new Error(e));
-    });
-};
-
-
-var location = function(callback, ip, key, field){
+var location = async function (callback, ip, key, field) {
     var path;
     var isField = false;
 
@@ -69,18 +49,17 @@ var location = function(callback, ip, key, field){
             path = '/' + ip + '/json/';
         } else {
             path = '/json/';
-        }        
+        }
     }
 
-    if ((typeof key !== 'undefined') && (key !== '')){
+    if ((typeof key !== 'undefined') && (key !== '')) {
         path = path + '?key=' + key;
     } else {
-        if (API_KEY !== ''){
+        if (API_KEY !== '') {
             path = path + '?key=' + API_KEY;
-        } 
+        }
     }
-
-    _request(path, callback, (!isField))
+    return _request(path, callback, (!isField))
 };
 
 
@@ -88,5 +67,11 @@ var location = function(callback, ip, key, field){
  * Query location for an IP address
  */
 module.exports = {
-    location : location,
+    location: location,
 };
+
+
+/*  You can call API like this.
+    *   var loc = await require('ipapi.co').location(x => x, 'your ip adress');
+    *   console.log(loc);
+ */
